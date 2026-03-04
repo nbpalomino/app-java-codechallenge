@@ -1,5 +1,6 @@
 package com.yape.business.financial.infrastructure.events.command;
 
+import com.yape.business.financial.infrastructure.cache.TransactionCache;
 import com.yape.business.financial.infrastructure.events.TransactionCreatedEvent;
 import com.yape.business.financial.infrastructure.events.TransactionEventBus;
 import com.yape.business.financial.infrastructure.service.EventStoreService;
@@ -17,6 +18,7 @@ import java.util.UUID;
 public class CreateTransactionHandler implements CommandHandler<CreateTransactionCommand> {
     private final TransactionEventBus eventBus;
     private final EventStoreService eventStoreService;
+    private final TransactionCache cache;
     private final ObjectMapper mapper;
 
     @Override
@@ -26,7 +28,11 @@ public class CreateTransactionHandler implements CommandHandler<CreateTransactio
         eventStoreService.storeEvent(
                 command.getId(), event.eventName(), mapper.writeValueAsString(event))
             .doOnSuccess(
-                eventEntity ->  eventBus.publish(event))
+                eventEntity -> {
+                    cache.save(event)
+                            .doOnSuccess(result -> log.info("Redis saved: {}", result)).subscribe();
+                    eventBus.publish(event);
+                })
             .doOnError(
                 err -> log.warn(err.getMessage()))
             .subscribe();
