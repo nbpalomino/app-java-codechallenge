@@ -1,8 +1,8 @@
-package com.yape.business.financial.infrastructure.web.payload;
+package com.yape.business.financial.infrastructure.web.request;
 
 import java.math.BigDecimal;
 
-public record TransactionPayload (
+public record CreateTransactionRequest(
     String accountExternalIdDebit,
     String accountExternalIdCredit,
     Integer transferTypeId,

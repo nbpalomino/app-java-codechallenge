@@ -14,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TransactionData {
     UUID id;
-    TransactionType status;
+    TransactionStatus status;
     BigDecimal value;
 }
 

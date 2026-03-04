@@ -23,10 +23,10 @@ public class TransactionCreatedListener {
                 .flatMap(event -> {
                     log.info("[EVENT={}]: {}", event.eventName(), event);
                     return messageService.sendTransactionRequest(TransactionData.builder()
-                            .id(event.id())
-                            .status(event.status())
-                            .value(event.value())
-                            .build());
+                        .id(event.id())
+                        .status(event.status())
+                        .value(event.value())
+                        .build());
                 })
                 .subscribe();
     }

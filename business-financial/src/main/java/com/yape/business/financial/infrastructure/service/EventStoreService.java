@@ -22,4 +22,9 @@ public class EventStoreService {
         return eventStoreRepository.save(event)
                 .as(operator::transactional);
     }
+
+    public Mono<EventEntity> findById(UUID transactionId) {
+        return eventStoreRepository.findByTransactionId(transactionId)
+                .as(operator::transactional);
+    }
 }

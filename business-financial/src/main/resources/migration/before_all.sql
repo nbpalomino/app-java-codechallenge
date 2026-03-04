@@ -6,7 +6,7 @@ CREATE TABLE financial_db.public.event_store (
     event_type VARCHAR(255) NOT NULL,
     payload JSONB NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_version_per_transaction UNIQUE (transaction_id)
+    CONSTRAINT unique_version_per_transaction UNIQUE (transaction_id, event_type)
 );
 
 CREATE INDEX idx_transaction_id ON financial_db.public.event_store(transaction_id);

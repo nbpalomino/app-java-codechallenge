@@ -1,5 +1,8 @@
 package com.yape.business.financial.infrastructure.service;
 
+import com.yape.business.financial.infrastructure.events.TransactionUpdatedEvent;
+import com.yape.business.financial.infrastructure.events.command.CommandBus;
+import com.yape.business.financial.infrastructure.events.command.UpdateTransactionStatusCommand;
 import com.yape.shared.domain.TransactionData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +21,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class TransactionMessageService {
     private final KafkaTemplate<String, TransactionData> kafkaTemplate;
+    private final CommandBus commandBus;
 
     @Value("${app.kafka.topic-result}")
     private String resultTopic;
@@ -28,11 +32,11 @@ public class TransactionMessageService {
         log.info("SEND [{}] with body: {}", requestTopic, transaction);
 
         return Mono.fromFuture(
-                        kafkaTemplate.send(requestTopic, transaction.getId().toString(), transaction))
-                .doOnSuccess(
-                        result -> log.info("SUCCESS send to topic: {}", result.getRecordMetadata().topic()))
-                .doOnError(
-                        ex -> log.error("FAILED to Send transaction", ex));
+                kafkaTemplate.send(requestTopic, transaction.getId().toString(), transaction))
+            .doOnSuccess(
+                result -> log.info("SUCCESS send to topic: {}", result.getRecordMetadata().topic()))
+            .doOnError(
+                ex -> log.error("FAILED to Send transaction [TOPIC={}]", requestTopic, ex));
     }
 
     @KafkaListener(topics = "${app.kafka.topic-result}", groupId = "${spring.kafka.consumer.group-id}")
@@ -41,7 +45,10 @@ public class TransactionMessageService {
         log.info("RECEIVED [{}] with key: {}, {}", resultTopic, key, transaction);
 
         // Actualizar el STATUS
+        commandBus.dispatch(UpdateTransactionStatusCommand.builder()
+                .id(transaction.getId())
+                .status(transaction.getStatus())
+                .build());
         log.info("VALIDATED transaction STATUS={}", transaction.getStatus());
-
     }
 }
